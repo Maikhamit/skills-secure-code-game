@@ -3,13 +3,15 @@ import code as c
 
 class TestOnlineStore(unittest.TestCase):
 
-    # Tricks the system and walks away with 1 television, despite valid payment & reimbursement
-    def test_6(self):
-        tv_item = c.Item(type='product', description='tv', amount=1000.00, quantity=1)
-        payment = c.Item(type='payment', description='invoice_4', amount=1e19, quantity=1)
-        payback = c.Item(type='payment', description='payback_4', amount=-1e19, quantity=1)
-        order_4 = c.Order(id='4', items=[payment, tv_item, payback])
-        self.assertEqual(c.validorder(order_4), 'Order ID: 4 - Payment imbalance: $-1000.00')
+   def test_6(self):
+    """Tricks the system with extremely large payment and reimbursement amounts."""
+    tv_item = c.Item(type='product', description='tv', amount=1000.00, quantity=1)
+    payment = c.Item(type='payment', description='invoice_4', amount=1e19, quantity=1)
+    payback = c.Item(type='payment', description='payback_4', amount=-1e19, quantity=1)
+    order_4 = c.Order(id='4', items=[payment, tv_item, payback])
+    with self.assertRaises(ValueError) as context:
+        c.validorder(order_4)
+    self.assertIn("Invalid amount", str(context.exception))
 
     # Valid payments that should add up correctly, but do not
     def test_7(self):
@@ -21,6 +23,7 @@ class TestOnlineStore(unittest.TestCase):
 
     # The total amount payable in an order should be limited
     def test_8(self):
+        """Total amount payable in an order should be limited."""
         num_items = 12
         items = [c.Item(type='product', description='tv', amount=99999, quantity=num_items)]
         for i in range(num_items):

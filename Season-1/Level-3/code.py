@@ -1,7 +1,3 @@
-# Welcome to Secure Code Game Season-1/Level-3!
-
-# You know how to play by now, good luck!
-
 import os
 from flask import Flask, request
 
@@ -21,35 +17,52 @@ class TaxPayer:
         self.prof_picture = None
         self.tax_form_attachment = None
 
-    # returns the path of an optional profile picture that users can set
+    # Returns the path of an optional profile picture that users can set
     def get_prof_picture(self, path=None):
-        # setting a profile picture is optional
+        # Setting a profile picture is optional
         if not path:
-            pass
-
-        # defends against path traversal attacks
-        if path.startswith('/') or path.startswith('..'):
             return None
 
-        # builds path
+        # Defends against path traversal attacks
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        prof_picture_path = os.path.normpath(os.path.join(base_dir, path))
+        full_path = os.path.normpath(os.path.join(base_dir, path))
 
-        with open(prof_picture_path, 'rb') as pic:
+        # Ensure the path remains within the base directory
+        if not full_path.startswith(base_dir):
+            return None
+
+        # Check if the file exists and is accessible
+        if not os.path.isfile(full_path):
+            return None
+
+        with open(full_path, 'rb') as pic:
             picture = bytearray(pic.read())
 
-        # assume that image is returned on screen after this
-        return prof_picture_path
+        # Assume that the image is returned on screen after this
+        return full_path
 
-    # returns the path of an attached tax form that every user should submit
+    # Returns the path of an attached tax form that every user should submit
     def get_tax_form_attachment(self, path=None):
-        tax_data = None
-
+    # Tax form submission is mandatory
         if not path:
             raise Exception("Error: Tax form is required for all users")
 
-        with open(path, 'rb') as form:
+        # Defends against path traversal attacks
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        full_path = os.path.normpath(os.path.join(base_dir, path))
+
+        # Ensure the path remains within the base directory
+        if not full_path.startswith(base_dir):
+            # Instead of raising an exception, return `None` for invalid paths
+            return None
+
+        # Check if the file exists and is accessible
+        if not os.path.isfile(full_path):
+            # Instead of raising an exception, return `None` for missing files
+            return None
+
+        with open(full_path, 'rb') as form:
             tax_data = bytearray(form.read())
 
-        # assume that tax data is returned on screen after this
-        return path
+        # Assume that tax data is returned on screen after this
+        return full_path
